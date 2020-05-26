@@ -14,4 +14,22 @@ document.addEventListener('click', (event) => {
   }
 });
 
+leftMenu.addEventListener('click', (event) => {
+  const target = event.target;
+  const dropdown = target.closest('.dropdown');
+  console.log('target: ', target);
+  console.log('dropdown: ', dropdown);
 
+  if (dropdown) {
+    dropdown.classList.toggle('active');
+    leftMenu.classList.add('openMenu');
+    hamburger.classList.add('open');
+  }
+});
+
+// Images
+// const tvCardImg = document.querySelector('.tv-card__img');
+
+// tvCardImg.addEventListener('click', () => {
+
+// })
