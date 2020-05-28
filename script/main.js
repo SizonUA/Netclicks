@@ -1,10 +1,24 @@
 const IMG_URL = "https://image.tmdb.org/t/p/w185_and_h278_bestv2",
-  API_KEY = 'fc72db78f66b1438d9694bed567d35c9';
+  API_KEY = "fc72db78f66b1438d9694bed567d35c9";
 
 const leftMenu = document.querySelector(".left-menu"),
   hamburger = document.querySelector(".hamburger"),
+  tvShows = document.querySelector(".tv-shows"),
   tvShowsList = document.querySelector(".tv-shows__list"),
-  modal = document.querySelector(".modal");
+  modal = document.querySelector(".modal"),
+  tvCardImg = document.querySelector(".tv-card__img"),
+  modalTitle = document.querySelector(".modal__title"),
+  genresList = document.querySelector(".genres-list"),
+  rating = document.querySelector(".rating"),
+  description = document.querySelector(".description"),
+  modalLink = document.querySelector(".modal__link");
+
+// Preloader
+const loading = document.createElement("div");
+loading.className = "loading";
+
+const preloader = document.createElement("div");
+preloader.className = "preloader";
 
 // Class
 const DBService = class {
@@ -20,6 +34,10 @@ const DBService = class {
   getTestData = () => {
     return this.getData("test.json");
   };
+
+  getTestCard = () => {
+    return this.getData("card.json");
+  };
 };
 
 const renderCard = (response) => {
@@ -30,19 +48,18 @@ const renderCard = (response) => {
       backdrop_path: backdrop,
       name: title,
       poster_path: poster,
-      vote_average: vote
+      vote_average: vote,
     } = item;
 
-    const posterIMG = poster ? IMG_URL + poster : 'img/no-poster.jpg',
-      backdropIMG = backdrop ? IMG_URL + backdrop : posterIMG;
-    // voteElem = vote ? vote : '';
-
+    const posterIMG = poster ? IMG_URL + poster : "img/no-poster.jpg",
+      backdropIMG = backdrop ? IMG_URL + backdrop : posterIMG,
+      voteElem = vote ? `<span class="tv-card__vote">${vote}</span>` : "";
 
     const card = document.createElement("li");
     card.className = "tv-shows__item";
     card.innerHTML = `
       <a href="#" class="tv-card">
-        <span class="tv-card__vote">${vote}</span>
+        ${voteElem}
         <img
           class="tv-card__img"
           src="${posterIMG}"
@@ -52,11 +69,15 @@ const renderCard = (response) => {
         <h4 class="tv-card__head">${title}</h4>
       </a>
     `;
+    loading.remove();
     tvShowsList.append(card);
   });
 };
 
-new DBService().getTestData().then(renderCard);
+{
+  tvShows.append(loading);
+  new DBService().getTestData().then(renderCard);
+}
 
 // Menu
 // open menu
@@ -92,8 +113,27 @@ tvShowsList.addEventListener("click", (event) => {
   const target = event.target,
     card = target.closest(".tv-card");
   if (card) {
-    document.body.style.overflow = "hidden";
-    modal.classList.remove("hide");
+    // tvShowsList.append(preloader);
+
+    new DBService()
+      .getTestCard()
+      .then((response) => {
+        console.log("response: ", response);
+        tvCardImg.src = IMG_URL + response.poster_path;
+        modalTitle.textContent = response.name;
+        genresList.textContent = "";
+        for (const item of response.genres) {
+          genresList.innerHTML += `<li>${item.name}</li>`;
+        }
+        // rating = response.;
+        // description = '';
+        // modalLink = '';
+      })
+      .then(() => {
+        // preloader.remove();
+        document.body.style.overflow = "hidden";
+        modal.classList.remove("hide");
+      });
   }
 });
 
