@@ -1,5 +1,6 @@
 const IMG_URL = "https://image.tmdb.org/t/p/w185_and_h278_bestv2",
-  API_KEY = "fc72db78f66b1438d9694bed567d35c9";
+  API_KEY = "fc72db78f66b1438d9694bed567d35c9",
+  SERVER = "https://api.themoviedb.org/3";
 
 const leftMenu = document.querySelector(".left-menu"),
   hamburger = document.querySelector(".hamburger"),
@@ -11,7 +12,9 @@ const leftMenu = document.querySelector(".left-menu"),
   genresList = document.querySelector(".genres-list"),
   rating = document.querySelector(".rating"),
   description = document.querySelector(".description"),
-  modalLink = document.querySelector(".modal__link");
+  modalLink = document.querySelector(".modal__link"),
+  searchForm = document.querySelector(".search__form"),
+  searchFormInput = document.querySelector(".search__form-input");
 
 // Preloader
 const loading = document.createElement("div");
@@ -31,15 +34,18 @@ const DBService = class {
     }
   };
 
-  getTestData = () => {
-    return this.getData("test.json");
+  getSearchResult = (query) => {
+    return this.getData(
+      `${SERVER}/search/tv?api_key=${API_KEY}&language=ru-RU&query=${query}`
+    );
   };
 
-  getTestCard = () => {
-    return this.getData("card.json");
+  getTvShow = (id) => {
+    return this.getData(`${SERVER}/tv/${id}?api_key=${API_KEY}&language=ru-RU`);
   };
 };
 
+// Render card
 const renderCard = (response) => {
   tvShowsList.textContent = "";
 
@@ -49,6 +55,7 @@ const renderCard = (response) => {
       name: title,
       poster_path: poster,
       vote_average: vote,
+      id,
     } = item;
 
     const posterIMG = poster ? IMG_URL + poster : "img/no-poster.jpg",
@@ -58,7 +65,7 @@ const renderCard = (response) => {
     const card = document.createElement("li");
     card.className = "tv-shows__item";
     card.innerHTML = `
-      <a href="#" class="tv-card">
+      <a href="#" id='${id}' class="tv-card">
         ${voteElem}
         <img
           class="tv-card__img"
@@ -74,10 +81,16 @@ const renderCard = (response) => {
   });
 };
 
-{
-  tvShows.append(loading);
-  new DBService().getTestData().then(renderCard);
-}
+// Search
+searchForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const value = searchFormInput.value.trim();
+  searchFormInput.value = "";
+  if (value) {
+    tvShows.append(loading);
+    new DBService().getSearchResult(value).then(renderCard);
+  }
+});
 
 // Menu
 // open menu
@@ -96,6 +109,7 @@ document.addEventListener("click", (event) => {
 
 // deploy item menu
 leftMenu.addEventListener("click", (event) => {
+  event.preventDefault();
   const target = event.target,
     dropdown = target.closest(".dropdown");
   if (dropdown) {
@@ -116,18 +130,24 @@ tvShowsList.addEventListener("click", (event) => {
     // tvShowsList.append(preloader);
 
     new DBService()
-      .getTestCard()
+      .getTvShow(card.id)
       .then((response) => {
-        console.log("response: ", response);
-        tvCardImg.src = IMG_URL + response.poster_path;
+        tvCardImg.src = response.poster_path
+          ? IMG_URL + response.poster_path
+          : "img/no-poster.jpg";
+
+        // posterIMG = poster ? IMG_URL + poster : "img/no-poster.jpg",
+        // backdropIMG = backdrop ? IMG_URL + backdrop : posterIMG,
+
+        tvCardImg.alt = response.name;
         modalTitle.textContent = response.name;
         genresList.textContent = "";
         for (const item of response.genres) {
           genresList.innerHTML += `<li>${item.name}</li>`;
         }
-        // rating = response.;
-        // description = '';
-        // modalLink = '';
+        rating.textContent = response.vote_average;
+        description.textContent = response.overview;
+        modalLink.href = response.homepage;
       })
       .then(() => {
         // preloader.remove();
