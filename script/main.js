@@ -1,3 +1,5 @@
+// https://developers.themoviedb.org/3/getting-started/introduction  -  The movie data base
+
 const IMG_URL = "https://image.tmdb.org/t/p/w185_and_h278_bestv2",
   API_KEY = "fc72db78f66b1438d9694bed567d35c9",
   SERVER = "https://api.themoviedb.org/3";
@@ -27,7 +29,6 @@ loading.className = "loading";
 // Class
 const DBService = class {
   getData = async (url) => {
-    tvShows.append(loading);
     const response = await fetch(url);
     if (response.ok) {
       return response.json();
@@ -47,21 +48,24 @@ const DBService = class {
   };
 
   getTopRated = () => {
+    tvShows.append(loading);
     return this.getData(`${SERVER}/tv/top_rated?api_key=${API_KEY}&language=ru-RU`);
   };
 
   getPopular = () => {
+    tvShows.append(loading);
     return this.getData(`${SERVER}/tv/popular?api_key=${API_KEY}&language=ru-RU`);
   };
 
   getToday = () => {
+    tvShows.append(loading);
     return this.getData(`${SERVER}/tv/airing_today?api_key=${API_KEY}&language=ru-RU`);
   };
 
   getWeek = () => {
+    tvShows.append(loading);
     return this.getData(`${SERVER}/tv/on_the_air?api_key=${API_KEY}&language=ru-RU`);
   };
-
 };
 
 // Render card
@@ -109,10 +113,11 @@ const renderCard = (response, target) => {
 // Search
 searchForm.addEventListener("submit", (event) => {
   event.preventDefault();
+
   const value = searchFormInput.value.trim();
   searchFormInput.value = "";
   if (value) {
-    // tvShows.append(loading);
+    tvShows.append(loading);
     new DBService().getSearchResult(value).then(renderCard);
   }
 });
@@ -124,7 +129,6 @@ hamburger.addEventListener("click", () => {
   hamburger.classList.toggle("open");
   closeDropdown();
 });
-
 
 // close menu
 document.addEventListener("click", (event) => {
@@ -138,12 +142,18 @@ document.addEventListener("click", (event) => {
 // deploy item menu
 leftMenu.addEventListener("click", (event) => {
   event.preventDefault();
+
   const target = event.target,
     dropdown = target.closest(".dropdown");
   if (dropdown) {
     dropdown.classList.toggle("active");
     leftMenu.classList.add("openMenu");
     hamburger.classList.add("open");
+  }
+
+  if (target.closest('#search')) {
+    tvShowsList.textContent = '';
+    tvShowsHead.textContent = '';
   }
 
   if (target.closest('#top-rated')) {
@@ -161,17 +171,14 @@ leftMenu.addEventListener("click", (event) => {
   if (target.closest('#week')) {
     new DBService().getWeek().then((response) => renderCard(response, target));
   }
-
-
 });
 
 // Close dropdown
 const closeDropdown = () => {
   dropdown.forEach(item => {
     item.classList.remove('active');
-
   });
-}
+};
 
 
 // Modal
@@ -227,7 +234,6 @@ modal.addEventListener("click", (event) => {
 // change card img
 const changeImage = (event) => {
   const card = event.target.closest(".tv-shows__item");
-
   if (card) {
     const img = card.querySelector(".tv-card__img");
     if (img.dataset.backdrop) {
